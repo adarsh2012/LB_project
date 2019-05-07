@@ -1,10 +1,24 @@
 // some part of this code is from https://thecodebarbarian.com/building-your-own-load-balancer-with-express-js 
 // useing express frame work 
 const express = require('express'); 
-const request = require('request'); 
+const request = require('request');
+const https = require('https'); 
 const cookie = require('cookie-parser'); 
-const server = express(); 
+const fs = require('fs');
+const Ddos = require('ddos');
+//make server
+const ddos = new Ddos({burst:10, limit:15});
+const server = express();
+const httpsOption = {
+    key: fs.readFileSync('keys/server.key'),
+    cert: fs.readFileSync('keys/server.cert')
+};
+const serverhttps = https.createServer(httpsOption, server);
+// const server = express(); 
+server.use(ddos.express);
 server.use(cookie()); 
+
+
 
 
 const servers = ['http://192.168.1.92:3000','http://192.168.1.92:3001'];//['http://localhost:8080', 'http://localhost:8081'];////, 'http://localhost:8082']; 
@@ -127,4 +141,4 @@ server.post('/down', down);
 server.post('/up', up); 
 server.get('*', handler).post('*', handler); 
 
-server.listen(8000);
+serverhttps.listen(443);
