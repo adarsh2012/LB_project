@@ -1,27 +1,14 @@
 // some part of this code is from https://thecodebarbarian.com/building-your-own-load-balancer-with-express-js 
 // useing express frame work 
 const express = require('express'); 
-const request = require('request');
-const https = require('https'); 
+const request = require('request'); 
 const cookie = require('cookie-parser'); 
-const fs = require('fs');
-const Ddos = require('ddos');
-//make server
-const ddos = new Ddos({burst:10, limit:15});
-const server = express();
-const httpsOption = {
-    key: fs.readFileSync('keys/server.key'),
-    cert: fs.readFileSync('keys/server.cert')
-};
-const serverhttps = https.createServer(httpsOption, server);
-// const server = express(); 
-server.use(ddos.express);
+const server = express(); 
 server.use(cookie()); 
 
 
-
-
-const servers = ['<serverIP>','<server2IP>'];//['http://localhost:8080', 'http://localhost:8081'];////, 'http://localhost:8082']; 
+const servers = ['<serverIP>', '<server2IP>'];//['http://localhost:8080', 'http://localhost:8081'];////, 'http://localhost:8082']; 
+//const index = ['http://10.66.5.148:3000/', 'http://10.66.5.148:3001/']; 
 const active = [1,1]; 
 const last_check = [Date.now(),Date.now()]; 
 
@@ -78,6 +65,7 @@ if (!(server_no)) {
 console.log("no cookie"); 
 res.cookie("server_no", cur); 
 server_no = cur; 
+
 cur = (cur + 1) % sl; 
 } 
 if (active[server_no] != 1) { 
@@ -91,10 +79,14 @@ server_no = 0;
 server_no = (server_no + 1) % sl; 
 } 
 console.log("new server no", server_no); 
+//res.clearCookie("server_no"); 
 res.cookie("server_no", server_no); 
-console.log("------------------------"); 
-} 
 
+console.log("------------------------"); 
+
+} 
+//res.send("update cookie"); //update cookie 
+console.log("use server no",server_no); 
 const _req = request({ url: servers[server_no] + req.url }).on('error', error => { 
 res.status(500).send(error.message); 
 }); 
@@ -135,10 +127,18 @@ last_check[index] = Date.now();
 } 
 }; 
 
+const reg_server = (req, res) => { 
+var origin = req.header('origin'); 
+servers.push(origin); 
+sl = sl + 1; 
+active.push(1); 
+last_check.push(Date.now); 
+}; 
 
-server.post('/health', health); 
+//server.post('/health', health); 
 server.post('/down', down); 
 server.post('/up', up); 
+server.post('/reg_server', reg_server) 
 server.get('*', handler).post('*', handler); 
 
-serverhttps.listen(443);
+server.listen(8000);
