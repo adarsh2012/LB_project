@@ -21,7 +21,7 @@ server.use(cookie());
 
 
 
-const servers = ['http://192.168.1.92:3000','http://192.168.1.92:3001'];//['http://localhost:8080', 'http://localhost:8081'];////, 'http://localhost:8082']; 
+const servers = ['<serverIP>','<server2IP>'];//['http://localhost:8080', 'http://localhost:8081'];////, 'http://localhost:8082']; 
 const active = [1,1]; 
 const last_check = [Date.now(),Date.now()]; 
 
